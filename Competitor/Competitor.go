@@ -217,14 +217,17 @@ func CaleMonthlyIncome(mainApp *MainApp.MainApp, shopId string) error {
 			return err
 		}
 		// fmt.Println(itemDetail)
-		fmt.Printf("Get ShopId=%s ItemId=%s [%d/%d] isCache=%v DataLen=%d\n", shopId, value, cnt, totalCnt, isCache, len(itemDetail))
 
 		tmpA := itemDetail["item"].(map[string]interface{})
 		price := tmpA["price"].(float64) / 100000
 		sold := tmpA["sold"].(float64)
-		// name := tmpA["name"].(string)
+		price_min := tmpA["price_min"].(float64) / 100000
+		price_max := tmpA["price_max"].(float64) / 100000
+		name := tmpA["name"].(string)
 		// stock := tmpA["stock"].(float64)
-		totalIncome += price * sold
+		totalIncome += (price_min + price_max) / 2 * sold
+		fmt.Printf("Get ShopId=%s ItemId=%s [%d/%d] isCache=%v Name=%s\n", shopId, value, cnt, totalCnt, isCache, name)
+
 		fmt.Printf("price=%f  sold=%f, totalIncome=%f\n", price, sold, totalIncome)
 		cnt++
 		if isCache == false {

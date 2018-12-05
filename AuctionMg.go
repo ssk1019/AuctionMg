@@ -25,6 +25,9 @@ func main() {
 	// result, errSql := HanMainApp.DbMySql.Exec(strSQL)
 	// fmt.Println(result, errSql)
 
-	Competitor.CaleMonthlyIncome(HanMainApp, "28876327")
+	// Competitor.CaleMonthlyIncome(HanMainApp, "62140966")	// My
+	Competitor.CaleMonthlyIncome(HanMainApp, "28876327")	// 親子媽
+	
+
 
 }
