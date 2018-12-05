@@ -5,15 +5,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func ReadWebPage(url string) (string, error) {
 	// 參考 https://dlintw.github.io/gobyexample/public/http-client.html
 
+	timeout := time.Duration(15 * time.Second)
+
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	client := &http.Client{Transport: tr}
+	client := &http.Client{Transport: tr, Timeout: timeout}
 	resp, err := client.Get(url)
 	if err != nil {
 		return "", err
