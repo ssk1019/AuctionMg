@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"golang.org/x/text/encoding/traditionalchinese"
 	"golang.org/x/text/transform"
@@ -78,9 +79,10 @@ func Encodebig5(strSource string, strOutput *string) error {
 }
 
 func SalesImport(csvFilePath string) {
-
 	csvFile, _ := os.Open(csvFilePath)
-	reader := csv.NewReader(bufio.NewReader(csvFile))
+	csvFileBig5 := transform.NewReader(csvFile, traditionalchinese.Big5.NewDecoder()) //使用 big5 讀檔案
+	reader := csv.NewReader(bufio.NewReader(csvFileBig5))
+	defer csvFile.Close()
 	var orderInfo []OrderInfo
 	for {
 		line, error := reader.Read()
@@ -91,7 +93,7 @@ func SalesImport(csvFilePath string) {
 		}
 
 		for i := 0; i < len(line); i++ {
-			Decodebig5(line[i], &line[i])
+			// Encodebig5(line[i], &line[i])
 		}
 
 		oneOrder := OrderInfo{
@@ -137,7 +139,12 @@ func SalesImport(csvFilePath string) {
 		oneOrder.sellerDiscount, _ = strconv.ParseFloat(line[11], 32)
 		orderInfo = append(orderInfo, oneOrder)
 
-		fmt.Println(line[0], line[3], line[12])
+		// fmt.Println(line[0], line[3],  strings.Split(line[12], ";"))
+		buyDetail := strings.Split(line[12], ";")
+		for i := 0; i < len(buyDetail); i++ {
+			fmt.Println(buyDetail[i])
+		}
+		fmt.Println("---------")
 	}
 
 }
