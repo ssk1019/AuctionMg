@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"./Competitor"
 	"./DbMySql"
 	"./MainApp"
+	"./Models"
 )
 
 func main() {
@@ -25,9 +25,8 @@ func main() {
 	// result, errSql := HanMainApp.DbMySql.Exec(strSQL)
 	// fmt.Println(result, errSql)
 
+	Models.SalesImport("./Data/fafafa1019.shopee-order.20181101-20181130.csv")
 	// Competitor.CaleMonthlyIncome(HanMainApp, "62140966")	// My
-	Competitor.CaleMonthlyIncome(HanMainApp, "28876327")	// 親子媽
-	
-
+	// Competitor.CaleMonthlyIncome(HanMainApp, "28876327") // 親子媽
 
 }
