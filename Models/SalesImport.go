@@ -2,11 +2,10 @@ package Models
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -14,7 +13,13 @@ import (
 
 	"golang.org/x/text/encoding/traditionalchinese"
 	"golang.org/x/text/transform"
+
+	"../MainApp"
 )
+
+type SalesImport struct {
+	mainApp *MainApp.MainApp
+}
 
 type OrderInfo struct {
 	orderId           string  // 訂單編號
@@ -40,7 +45,7 @@ type OrderInfo struct {
 	buyerName         string  // 收件者姓名
 	phone             string  // 電話號碼
 	shippingMethod    string  // 寄送方式
-	ShipmentMethod    string  // 出貨方式
+	shipmentMethod    string  // 出貨方式
 	orderType         string  // 訂單類型
 	payMethod         string  // 付款方式
 	ccLast4           string  // 信用卡後四碼
@@ -52,33 +57,35 @@ type OrderInfo struct {
 	comment           string  // 備註
 }
 
-//convert BIG5 to UTF-8    https://gist.github.com/zhangbaohe/c691e1da5bbdc7f41ca5
-func Decodebig5(strSource string, strOutput *string) error {
-	s := []byte(strSource)
-	I := bytes.NewReader(s)
-	O := transform.NewReader(I, traditionalchinese.Big5.NewDecoder())
-	d, e := ioutil.ReadAll(O)
-	if e != nil {
-		return e
-	}
-	*strOutput = string(d)
-	return nil
+func (v *SalesImport) Init(mainApp *MainApp.MainApp) {
+	v.mainApp = mainApp
 }
 
-//convert UTF-8 to BIG5
-func Encodebig5(strSource string, strOutput *string) error {
-	s := []byte(strSource)
-	I := bytes.NewReader(s)
-	O := transform.NewReader(I, traditionalchinese.Big5.NewEncoder())
-	d, e := ioutil.ReadAll(O)
-	if e != nil {
-		return e
+// 以2關鍵字範圍取得文字內容
+func (v *SalesImport) getStringKeywordRange(strSrc *string, keyword1 string, keyword2 string) (string, error) {
+	idxStart := strings.Index(*strSrc, keyword1)
+	if idxStart < 0 {
+		return "", errors.New("Keyword1 not found! ")
 	}
-	*strOutput = string(d)
-	return nil
+	idxStart += len(keyword1)
+
+	idxEnd := strings.Index((*strSrc)[idxStart:], keyword2)
+	if idxEnd < 0 {
+		return "", errors.New("Keyword2 not found! ")
+	}
+
+	idxEnd += idxStart
+
+	// fmt.Println(idxStart, idxEnd, (*strSrc)[idxStart:idxEnd])
+
+	return (*strSrc)[idxStart:idxEnd], nil
 }
 
-func SalesImport(csvFilePath string) {
+func (v *SalesImport) CsvImportFromShopee(csvFilePath string) {
+
+	var strSQL string
+	var errSql error
+
 	csvFile, _ := os.Open(csvFilePath)
 	csvFileBig5 := transform.NewReader(csvFile, traditionalchinese.Big5.NewDecoder()) //使用 big5 讀檔案
 	reader := csv.NewReader(bufio.NewReader(csvFileBig5))
@@ -120,7 +127,7 @@ func SalesImport(csvFilePath string) {
 			buyerName:         line[20],
 			phone:             line[21],
 			shippingMethod:    line[22],
-			ShipmentMethod:    line[23],
+			shipmentMethod:    line[23],
 			orderType:         line[24],
 			payMethod:         line[25],
 			ccLast4:           line[26],
@@ -139,10 +146,40 @@ func SalesImport(csvFilePath string) {
 		oneOrder.sellerDiscount, _ = strconv.ParseFloat(line[11], 32)
 		orderInfo = append(orderInfo, oneOrder)
 
+		// strSQL = fmt.Sprintf("INSERT INTO ShopItemList(ShopId,UpdateTime,ItemIdList,ItemIdCnt) VALUES('%s','%s','%s', %d) ON DUPLICATE KEY UPDATE ShopId='%s',UpdateTime='%s',ItemIdList='%s',ItemIdCnt=%d", shopId, nowTimeStr, jsonString, len(listItemId), shopId, nowTimeStr, jsonString, len(listItemId))
+		strSQL = fmt.Sprintf("REPLACE INTO OrderInfo(Platform,OrderId,OrderStatus,OrderReturn,BuyerAccount,OrderTime,PayTime,OrderAmount,BuyerFreight,TotalPay,ShopeeCoin,ShopeeDiscount,SellerDiscount,BuyDetail,RecvAddr,Country,City,District,PostalCode,BuyerName,Phone,ShippingMethod,ShipmentMethod,OrderType,PayMethod,CcLast4,LastShippingTime,TrackingNum,RealShippingTime,OrderCompleteTime,BuyerComment,Comment) VALUES('shopee','%s','%s','%s','%s','%s','%s','%f','%f','%f','%f','%f','%f','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')", oneOrder.orderId, oneOrder.orderStatus, oneOrder.orderReturn, oneOrder.buyerAccount, oneOrder.orderTime, oneOrder.payTime, oneOrder.orderAmount, oneOrder.buyerFreight, oneOrder.totalPay, oneOrder.shopeeCoin, oneOrder.shopeeDiscount, oneOrder.sellerDiscount, "暫時不填", oneOrder.recvAddr, oneOrder.country, oneOrder.city, oneOrder.district, oneOrder.postalCode, oneOrder.buyerName, oneOrder.phone, oneOrder.shippingMethod, oneOrder.shipmentMethod, oneOrder.orderType, oneOrder.payMethod, oneOrder.ccLast4, oneOrder.lastShippingTime, oneOrder.trackingNum, oneOrder.realShippingTime, oneOrder.orderCompleteTime, oneOrder.buyerComment, oneOrder.comment)
+		_, errSql = v.mainApp.DbMySql.Exec(strSQL)
+		if errSql != nil {
+			fmt.Printf("dbMySql.Err=%s", errSql)
+		} else {
+			// fmt.Printf("Run SQL result=%q", result)
+		}
+
 		// fmt.Println(line[0], line[3],  strings.Split(line[12], ";"))
-		buyDetail := strings.Split(line[12], ";")
+		buyDetail := strings.Split(line[12], "\n")
 		for i := 0; i < len(buyDetail); i++ {
-			fmt.Println(buyDetail[i])
+			// fmt.Println(buyDetail[i])
+			// itemName, err := getStringKeywordRange(&buyDetail[i], "商品名稱:", ";")
+			itemModelName, err := v.getStringKeywordRange(&buyDetail[i], "商品選項名稱:", ";")
+			itemModel, err := v.getStringKeywordRange(&buyDetail[i], "商品選項貨號: ", ";")
+			itemId, err := v.getStringKeywordRange(&buyDetail[i], "主商品貨號: ", ";")
+			itemPriceS, err := v.getStringKeywordRange(&buyDetail[i], "價格: $ ", ";")
+			itemQtyS, err := v.getStringKeywordRange(&buyDetail[i], "數量: ", ";")
+			itemPrice, _ := strconv.Atoi(itemPriceS)
+			itemQty, _ := strconv.Atoi(itemQtyS)
+
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println("orderId:", oneOrder.orderId, "itemModelName:", itemModelName, "itemModel:", itemModel, "itemId:", itemId, "itemPrice:", itemPrice, "itemQty:", itemQty)
+			strSQL = fmt.Sprintf("REPLACE INTO OrderInfoBuyDetail(Platform,OrderId,ItemId,ItemModel,ItemModelName,ItemQty,ItemPrice) VALUES('shopee','%s','%s','%s','%s',%d,%d)", oneOrder.orderId, itemId, itemModel, itemModelName, itemQty, itemPrice)
+			_, errSql = v.mainApp.DbMySql.Exec(strSQL)
+			if errSql != nil {
+				fmt.Printf("dbMySql.Err=%s", errSql)
+			} else {
+				// fmt.Printf("Run SQL result=%q", result)
+			}
 		}
 		fmt.Println("---------")
 	}
