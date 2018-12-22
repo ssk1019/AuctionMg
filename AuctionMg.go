@@ -24,9 +24,18 @@ func main() {
 	// strSQL := fmt.Sprintf("INSERT INTO ShopItemList(ShopId,UpdateTime,ItemIdList,ItemIdCnt) VALUES('%s','%s','%s', %d) ON DUPLICATE KEY UPDATE ShopId='%s',UpdateTime='%s',ItemIdList='%s',ItemIdCnt=%d", "aaa", "2018-01-01 20:30:00", "{}", 1, "aaa", "2018-01-01 20:30:00", "{}", 1)
 	// result, errSql := HanMainApp.DbMySql.Exec(strSQL)
 	// fmt.Println(result, errSql)
-	salesImport := new(Models.SalesImport)
-	salesImport.Init(HanMainApp)
-	salesImport.CsvImportFromShopee("./Data/fafafa1019.shopee-order.20181101-20181130.csv")
+	if false {
+		salesImport := new(Models.SalesImport)
+		salesImport.Init(HanMainApp)
+		salesImport.CsvImportFromShopee("./Data/fafafa1019.shopee-order.20181101-20181130.csv")
+	}
+
+	if true {
+		salesStatistics := new(Models.SalesStatistics)
+		salesStatistics.Init(HanMainApp)
+		salesStatistics.MonthlyStatistics("2018/01/01 00:00:00", "2018/12/31 23:59:59")
+	}
+
 	// Competitor.CaleMonthlyIncome(HanMainApp, "62140966")	// My
 	// Competitor.CaleMonthlyIncome(HanMainApp, "28876327") // 親子媽
 
