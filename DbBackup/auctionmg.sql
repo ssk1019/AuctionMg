@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50724
 File Encoding         : 65001
 
-Date: 2018-12-07 20:06:46
+Date: 2018-12-22 23:30:45
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -1712,18 +1712,153 @@ INSERT INTO `orderinfobuydetail` VALUES ('shopee', '18113020266EVHK', 'PHC-0008-
 INSERT INTO `orderinfobuydetail` VALUES ('shopee', '18113021006GVPD', 'PHC-0009-BASEUS', '灰色', '灰色', '1', '189');
 
 -- ----------------------------
+-- Table structure for `productcost`
+-- ----------------------------
+DROP TABLE IF EXISTS `productcost`;
+CREATE TABLE `productcost` (
+  `ItemId` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ItemModel` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `ItemModelName` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `Weight` float NOT NULL DEFAULT '0',
+  `EffectiveDate` datetime NOT NULL DEFAULT '2018-01-01 00:00:00' COMMENT '生效時間',
+  `ItemCost` float NOT NULL DEFAULT '0' COMMENT '商品成本',
+  `ItemCostCourency` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'RMB' COMMENT '商品成本-計價貨幣',
+  `FreightCost` float NOT NULL DEFAULT '10' COMMENT ' 運費成本',
+  `FreightCostCourency` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'TWD' COMMENT '運費成本-計價貨幣',
+  `FreightCostPerWeight` float NOT NULL DEFAULT '90' COMMENT '以重量計算運費的價格',
+  PRIMARY KEY (`ItemId`,`ItemModel`),
+  KEY `ItemId` (`ItemId`,`ItemModel`),
+  KEY `ItemId_2` (`ItemId`,`ItemModelName`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------
+-- Records of productcost
+-- ----------------------------
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '0.6M?色', '0.6M?色', '0', '2018-01-03 00:00:00', '10', 'RMB', '12', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '0.6M藏青色', '0.6M藏青色', '0', '2018-01-04 00:00:00', '10', 'RMB', '13', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '0.6M黑色', '0.6M黑色', '0', '2018-01-02 00:00:00', '10', 'RMB', '11', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.2M?色', '1.2M?色', '0', '2018-01-06 00:00:00', '11', 'RMB', '15', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.2M咖啡色', '1.2M咖啡色', '0', '2018-01-08 00:00:00', '11', 'RMB', '17', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.2M藏青色', '1.2M藏青色', '0', '2018-01-07 00:00:00', '11', 'RMB', '16', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.2M黑色', '1.2M黑色', '0', '2018-01-05 00:00:00', '11', 'RMB', '14', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.8M?色', '1.8M?色', '0', '2018-01-10 00:00:00', '13', 'RMB', '19', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.8M咖啡色', '1.8M咖啡色', '0', '2018-01-12 00:00:00', '13', 'RMB', '21', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.8M藏青色', '1.8M藏青色', '0', '2018-01-11 00:00:00', '13', 'RMB', '20', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '1.8M黑色', '1.8M黑色', '0', '2018-01-09 00:00:00', '13', 'RMB', '18', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '3.0M?色', '3.0M?色', '0', '2018-01-13 00:00:00', '18.5', 'RMB', '22', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '3.0M咖啡色', '3.0M咖啡色', '0', '2018-01-15 00:00:00', '18.5', 'RMB', '24', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '3.0M藏青色', '3.0M藏青色', '0', '2018-01-14 00:00:00', '18.5', 'RMB', '23', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0001-KLX', '3.0M黑色', '3.0M黑色', '0', '2018-01-16 00:00:00', '18.5', 'RMB', '25', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0002-KLX', '1.0M?色', '1.0M?色', '0', '2018-01-18 00:00:00', '10', 'RMB', '27', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0002-KLX', '1.0M藍色', '1.0M藍色', '0', '2018-01-19 00:00:00', '10', 'RMB', '28', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0002-KLX', '1.0M黑色', '1.0M黑色', '0', '2018-01-17 00:00:00', '10', 'RMB', '26', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0003-TRN', '', '', '0', '2018-01-20 00:00:00', '0', 'RMB', '29', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0004-VISSKO', '銀白色-1.0M', '銀白色-1.0M', '0', '2018-01-22 00:00:00', '12', 'RMB', '31', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0004-VISSKO', '黑白色-1.0M', '黑白色-1.0M', '0', '2018-01-21 00:00:00', '12', 'RMB', '30', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0005-BASEUS', '金色-23cm', '金色-23cm', '0', '2018-01-24 00:00:00', '9', 'RMB', '33', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0005-BASEUS', '銀色-23cm', '銀色-23cm', '0', '2018-01-25 00:00:00', '9', 'RMB', '34', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0005-BASEUS', '黑色-23cm', '黑色-23cm', '0', '2018-01-23 00:00:00', '9', 'RMB', '32', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0006-BASEUS', '', '', '0', '2018-01-26 00:00:00', '16', 'RMB', '35', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0007-ROCK', '玫瑰金1.2m', '玫瑰金1.2m', '0', '2018-01-28 00:00:00', '25', 'RMB', '37', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0007-ROCK', '金色1.2m', '金色1.2m', '0', '2018-01-27 00:00:00', '25', 'RMB', '36', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0007-ROCK', '錆色1.2m', '錆色1.2m', '0', '2018-01-29 00:00:00', '25', 'RMB', '38', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0008-KLX', '粉色', '粉色', '0', '2018-02-01 00:00:00', '19', 'RMB', '41', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0008-KLX', '紅色', '紅色', '0', '2018-02-02 00:00:00', '19', 'RMB', '42', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0008-KLX', '藍色', '藍色', '0', '2018-01-31 00:00:00', '19', 'RMB', '40', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0008-KLX', '黑色', '黑色', '0', '2018-01-30 00:00:00', '19', 'RMB', '39', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0008-USAMS', '黑色', '黑色', '0', '2018-02-03 00:00:00', '21', 'RMB', '43', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0009-USAMS', '', '', '0', '2018-02-04 00:00:00', '21', 'RMB', '44', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0010-BASEUS', '腮紅金', '腮紅金', '0', '2018-02-07 00:00:00', '19', 'RMB', '47', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0010-BASEUS', '銀黑色', '銀黑色', '0', '2018-02-06 00:00:00', '19', 'RMB', '46', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0010-BASEUS', '黑色', '黑色', '0', '2018-02-05 00:00:00', '19', 'RMB', '45', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CC-0011-BASEUS', '', '', '0', '2018-02-08 00:00:00', '28', 'RMB', '48', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0001-ROCK', '白色', '白色', '0', '2018-02-10 00:00:00', '20', 'RMB', '50', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0001-ROCK', '紅色', '紅色', '0', '2018-02-12 00:00:00', '20', 'RMB', '52', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0001-ROCK', '藍色', '藍色', '0', '2018-02-11 00:00:00', '20', 'RMB', '51', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0001-ROCK', '黑色', '黑色', '0', '2018-02-09 00:00:00', '20', 'RMB', '49', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0002-VISSKO', '白色', '白色', '0', '2018-02-14 00:00:00', '27', 'RMB', '54', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0002-VISSKO', '黑色', '黑色', '0', '2018-02-13 00:00:00', '27', 'RMB', '53', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0003-HOCO', '', '', '0', '2018-02-15 00:00:00', '15', 'RMB', '55', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0004-BASEUS', '', '', '0', '2018-02-16 00:00:00', '24', 'RMB', '56', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-夜光款', '簡約款-夜光款', '0', '2018-02-26 00:00:00', '5', 'RMB', '66', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-橙色', '簡約款-橙色', '0', '2018-02-21 00:00:00', '5', 'RMB', '61', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-白色', '簡約款-白色', '0', '2018-02-25 00:00:00', '5', 'RMB', '65', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-粉色', '簡約款-粉色', '0', '2018-02-22 00:00:00', '5', 'RMB', '62', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-紅色', '簡約款-紅色', '0', '2018-02-24 00:00:00', '5', 'RMB', '64', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-綠色', '簡約款-綠色', '0', '2018-02-20 00:00:00', '5', 'RMB', '60', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-藏青色', '簡約款-藏青色', '0', '2018-02-23 00:00:00', '5', 'RMB', '63', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-黑色', '簡約款-黑色', '0', '2018-02-19 00:00:00', '5', 'RMB', '59', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '運動升級款-夜光款', '運動升級款-夜光款', '0', '2018-03-04 00:00:00', '10', 'RMB', '72', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '運動升級款-天藍', '運動升級款-天藍', '0', '2018-03-03 00:00:00', '10', 'RMB', '71', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '運動升級款-粉色', '運動升級款-粉色', '0', '2018-03-02 00:00:00', '10', 'RMB', '70', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '運動升級款-紅色', '運動升級款-紅色', '0', '2018-03-01 00:00:00', '10', 'RMB', '69', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '運動升級款-藏青色', '運動升級款-藏青色', '0', '2018-02-28 00:00:00', '10', 'RMB', '68', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '運動升級款-黑色', '運動升級款-黑色', '0', '2018-02-27 00:00:00', '10', 'RMB', '67', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('LT-0001-HOCO', '', '', '0', '2018-02-17 00:00:00', '10', 'RMB', '57', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('LT-0002-BASEUS', '', '', '0', '2018-02-18 00:00:00', '9', 'RMB', '58', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0001-MHK', '', '', '0', '2018-03-05 00:00:00', '7', 'RMB', '73', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0002-MHK', '', '', '0', '2018-03-06 00:00:00', '12', 'RMB', '74', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0003-CKU', '', '', '0', '2018-03-07 00:00:00', '9.5', 'RMB', '75', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0003-CKU-1', '', '', '0', '2018-03-08 00:00:00', '9.5', 'RMB', '76', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0004-CKU', '', '', '0', '2018-03-09 00:00:00', '10', 'RMB', '77', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0005-KLX', '', '', '0', '2018-03-10 00:00:00', '10', 'RMB', '78', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0006-LEU', '', '', '0', '2018-03-11 00:00:00', '6', 'RMB', '79', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0007-LEU', '', '', '0', '2018-03-12 00:00:00', '5', 'RMB', '80', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0008-LEU', '', '', '0', '2018-03-13 00:00:00', '15', 'RMB', '81', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0009-LKS', '', '', '0', '2018-03-14 00:00:00', '14', 'RMB', '82', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0010-LKS', '', '', '0', '2018-03-15 00:00:00', '10', 'RMB', '83', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0011-LKS', '', '', '0', '2018-03-16 00:00:00', '20', 'RMB', '84', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0012-TRN', '', '', '0', '2018-03-17 00:00:00', '0', 'RMB', '85', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0013-TRN', '', '', '0', '2018-03-18 00:00:00', '0', 'RMB', '86', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0014-TRN', '', '', '0', '2018-03-19 00:00:00', '0', 'RMB', '87', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0015-TRN', '', '', '0', '2018-03-20 00:00:00', '0', 'RMB', '88', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0016-DOITMY', '', '', '0', '2018-03-21 00:00:00', '0', 'RMB', '89', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0017-DOITMY', '', '', '0', '2018-03-22 00:00:00', '0', 'RMB', '90', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0018-LEU', '', '', '0', '2018-03-23 00:00:00', '9', 'RMB', '91', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0019-MARHOOK', '', '', '0', '2018-03-24 00:00:00', '9.5', 'RMB', '92', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PC-0020-MARHOOK', '', '', '0', '2018-03-25 00:00:00', '4.5', 'RMB', '93', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PCW-0001-USAMS', '', '', '0', '2018-03-26 00:00:00', '12', 'RMB', '94', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHB-0001-LFZ', '', '', '0', '2018-03-27 00:00:00', '0', 'RMB', '95', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHB-0002-LFZ', '', '', '0', '2018-03-28 00:00:00', '0', 'RMB', '96', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0001-KLX', '', '', '0', '2018-03-29 00:00:00', '26', 'RMB', '97', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0002-TRN', '', '', '0', '2018-03-30 00:00:00', '4.9', 'RMB', '98', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0003-LFZ', '', '', '0', '2018-03-31 00:00:00', '8', 'RMB', '99', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0004-LFZ', '', '', '0', '2018-04-01 00:00:00', '8.5', 'RMB', '100', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0005-BASEUS', '', '', '0', '2018-04-02 00:00:00', '29', 'RMB', '101', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0006-BASEUS', '', '', '0', '2018-04-03 00:00:00', '15', 'RMB', '102', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0007-BASEUS', '', '', '0', '2018-04-04 00:00:00', '25', 'RMB', '103', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0008-BASEUS', '', '', '0', '2018-04-05 00:00:00', '25', 'RMB', '104', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0009-BASEUS', '', '', '0', '2018-04-06 00:00:00', '27', 'RMB', '105', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0010-VISSKO', '', '', '0', '2018-04-07 00:00:00', '0', 'RMB', '106', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0011-USAMS', '', '', '0', '2018-04-08 00:00:00', '15', 'RMB', '107', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHC-0014(15)-LFZ', '', '', '0', '2018-04-09 00:00:00', '8', 'RMB', '108', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHD-0001-LFZ', '', '', '0', '2018-04-10 00:00:00', '7', 'RMB', '109', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHD-0002-SEENDA', '', '', '0', '2018-04-11 00:00:00', '15', 'RMB', '110', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHM-0001-LFZ', '', '', '0', '2018-04-12 00:00:00', '0', 'RMB', '111', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('PHM-0002-LFZ', '', '', '0', '2018-04-13 00:00:00', '0', 'RMB', '112', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('RB-0001-CKU', '', '', '0', '2018-04-14 00:00:00', '5.8', 'RMB', '113', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('RB-0002-DOITMY', '', '', '0', '2018-04-15 00:00:00', '5.5', 'RMB', '114', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('RB-0003-DOITMY', '', '', '0', '2018-04-16 00:00:00', '5.3', 'RMB', '115', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('RB-0004-DOITMY', '', '', '0', '2018-04-17 00:00:00', '2.3', 'RMB', '116', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('SPK-0001-TRN', '', '', '0', '2018-04-18 00:00:00', '0', 'RMB', '117', 'TWD', '90');
+
+-- ----------------------------
 -- Table structure for `productinfo`
 -- ----------------------------
 DROP TABLE IF EXISTS `productinfo`;
 CREATE TABLE `productinfo` (
-  `ProductId` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '產品ID',
+  `ItemId` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '產品ID',
+  `ItemModel` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ItemModelName` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
   `Nickname` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `CreateTime` datetime NOT NULL,
   `NameCN` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `NameTW` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `Weight` float(8,0) NOT NULL,
   `Content` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`ProductId`)
+  PRIMARY KEY (`ItemId`,`ItemModel`),
+  KEY `ItemId` (`ItemId`,`ItemModel`),
+  KEY `ItemId_2` (`ItemId`,`ItemModelName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
