@@ -10,6 +10,7 @@ import (
 type SalesStatistics struct {
 	mainApp         *MainApp.MainApp
 	exchangeRMB2TWD float64
+	handlingFee     float64 // 平台手續費
 }
 
 type MonthlyStatistics struct {
@@ -36,24 +37,36 @@ type ItemCostInfo struct {
 func (v *SalesStatistics) Init(mainApp *MainApp.MainApp) {
 	v.mainApp = mainApp
 	v.exchangeRMB2TWD = 4.6
+	v.handlingFee = 0.0149
 }
 
 func (v *SalesStatistics) MonthlyStatistics_FindCost(itemId string, itemModelName string, orderTime string) (*ItemCostInfo, bool) {
 	var InfoItemCost = new(ItemCostInfo)
 
+	InfoItemCost.ItemCostCourency = "RMB"
+	InfoItemCost.FreightCostCourency = "RMB"
+	InfoItemCost.Weight = 0
+	InfoItemCost.ItemCost = 10
+	InfoItemCost.FreightCost = 10
+	InfoItemCost.FreightCostPerWeight = 0
+	return InfoItemCost, true
+
 	strSQL := fmt.Sprintf("SELECT Weight, ItemCost, ItemCostCourency, FreightCost, FreightCostCourency, FreightCostPerWeight FROM ProductCost WHERE ItemId='%s' AND ItemModelName='%s' AND EffectiveDate<='%s' ORDER BY EffectiveDate DESC LIMIT 1", itemId, itemModelName, orderTime)
 	sqlRows, errSql := v.mainApp.DbMySql.Query(strSQL)
+
 	defer sqlRows.Close()
 	if errSql != nil {
 		fmt.Printf("SalesStatistics.MonthlyStatistics_FindCost: dbMySql.Err=%s", errSql)
 		return InfoItemCost, false
 	}
+
 	if sqlRows.Next() { // 有找到相同的 ModelName
 		if err := sqlRows.Scan(&InfoItemCost.Weight, &InfoItemCost.ItemCost, &InfoItemCost.ItemCostCourency, &InfoItemCost.FreightCost, &InfoItemCost.FreightCostCourency, &InfoItemCost.FreightCostPerWeight); err != nil {
 			fmt.Printf("SalesStatistics.MonthlyStatistics_FindCost: dbMySql.Err=%s", err)
 			return InfoItemCost, false
 		}
 	} else { // 沒有相同的 ModelName 則找預設 ""
+
 		sqlRows.Close()
 		strSQL = fmt.Sprintf("SELECT Weight, ItemCost, ItemCostCourency, FreightCost, FreightCostCourency, FreightCostPerWeight FROM ProductCost WHERE ItemId='%s' AND ItemModelName='' AND EffectiveDate<='%s' ORDER BY EffectiveDate DESC LIMIT 1", itemId, orderTime)
 		sqlRows, errSql = v.mainApp.DbMySql.Query(strSQL)
@@ -72,7 +85,7 @@ func (v *SalesStatistics) MonthlyStatistics_FindCost(itemId string, itemModelNam
 	// 如果單位是 RMB, 轉換為 TWD
 	if InfoItemCost.ItemCostCourency == "RMB" {
 		InfoItemCost.ItemCost = InfoItemCost.ItemCost * v.exchangeRMB2TWD
-	} else if itemCostInfo.ItemCostCourency == "TWD" {
+	} else if InfoItemCost.ItemCostCourency == "TWD" {
 		// InfoItemCost.ItemCost
 	} else {
 		fmt.Printf("SalesStatistics.MonthlyStatistics_FindCost: Error Courency. ItemCostCourency=%s", InfoItemCost.ItemCostCourency)
@@ -83,7 +96,7 @@ func (v *SalesStatistics) MonthlyStatistics_FindCost(itemId string, itemModelNam
 	if InfoItemCost.FreightCostCourency == "RMB" {
 		InfoItemCost.FreightCost = InfoItemCost.FreightCost * v.exchangeRMB2TWD
 		InfoItemCost.FreightCostPerWeight = InfoItemCost.FreightCostPerWeight * v.exchangeRMB2TWD
-	} else if itemCostInfo.FreightCostCourency == "TWD" {
+	} else if InfoItemCost.FreightCostCourency == "TWD" {
 		// InfoItemCost.FreightCost
 	} else {
 		fmt.Printf("SalesStatistics.MonthlyStatistics_FindCost: Error Courency. FreightCostCourency=%s", InfoItemCost.FreightCostCourency)
@@ -100,9 +113,21 @@ func (v *SalesStatistics) MonthlyStatistics(dateStart string, dateEnd string) {
 	var sqlRows *sql.Rows
 	var errSql error
 
+	monthlyStatistics := MonthlyStatistics{
+		totalOrder:  0, // 總訂單數
+		totalProfit: 0, // 總毛利
+		totalIncome: 0, // 總營收
+		// itemSale:{},         // 商品銷售統計
+		totalFreeTransCnt: 0, // 免運訂單數量()
+		totalItemSaleCnt:  0, // 商品銷售總數量
+		totalHandlingFee:  0, // 總手續費
+		// buyerList:{},           // 紀錄買家清單, 統計不重複買家數
+		// dateList:{},            // 日期清單
+	}
+
 	var orderInfo []OrderInfo
 	// 先撈出所有指定時間內的訂單
-	strSQL = fmt.Sprintf("SELECT OrderId, OrderReturn, BuyerAccount, OrderTime, BuyerFreight, ShippingMethod, PayMethod FROM OrderInfo WHERE OrderTime>='%s' AND OrderTime<='%s'", dateStart, dateEnd)
+	strSQL = fmt.Sprintf("SELECT OrderId, OrderReturn, BuyerAccount, OrderTime, BuyerFreight, TotalPay, ShippingMethod, PayMethod FROM OrderInfo WHERE OrderTime>='%s' AND OrderTime<='%s'", dateStart, dateEnd)
 	// fmt.Println(strSQL)
 	sqlRows, errSql = v.mainApp.DbMySql.Query(strSQL)
 	defer sqlRows.Close()
@@ -111,9 +136,9 @@ func (v *SalesStatistics) MonthlyStatistics(dateStart string, dateEnd string) {
 	} else {
 		// fmt.Printf("Run SQL result=%q", result)
 		var orderId, orderReturn, buyerAccount, orderTime, shippingMethod, payMethod string
-		var buyerFreight float64
+		var buyerFreight, totalPay float64
 		for sqlRows.Next() {
-			if err := sqlRows.Scan(&orderId, &orderReturn, &buyerAccount, &orderTime, &buyerFreight, &shippingMethod, &payMethod); err != nil {
+			if err := sqlRows.Scan(&orderId, &orderReturn, &buyerAccount, &orderTime, &buyerFreight, &totalPay, &shippingMethod, &payMethod); err != nil {
 				fmt.Printf("SalesStatistics.MonthlyStatistics: dbMySql.Err=%s", err)
 				break
 			}
@@ -124,36 +149,46 @@ func (v *SalesStatistics) MonthlyStatistics(dateStart string, dateEnd string) {
 				buyerAccount:   buyerAccount,
 				orderTime:      orderTime,
 				buyerFreight:   buyerFreight,
+				totalPay:       totalPay,
 				shippingMethod: shippingMethod,
 				payMethod:      payMethod})
+
 		}
 	}
 	sqlRows.Close()
 
 	// 依據每一筆訂單撈出明細併統計
+	fmt.Println("Total:", len(orderInfo))
 	for i := 0; i < len(orderInfo); i++ {
 		var ItemId, ItemModel, ItemModelName string
 		var ItemQty int
 		var ItemPrice float64
 
-		fmt.Println(orderInfo[i].orderId)
+		orderHandlingFee := 0        // 單筆訂單平台手續費
+		orderHandlingFeeFloat := 0.0 // 單筆訂單平台手續費
+		creditCardHandlingFee := 0   // 單筆訂單信用卡手續費
+		orderProfit := 0.0           // 單筆訂單毛利
+		fmt.Println(i, "", orderInfo[i].orderId)
 		strSQL = fmt.Sprintf("SELECT ItemId, ItemModel, ItemModelName, ItemQty, ItemPrice FROM OrderInfoBuyDetail WHERE OrderId='%s'", orderInfo[i].orderId)
 		// fmt.Println(strSQL)
 		sqlRows, errSql = v.mainApp.DbMySql.Query(strSQL)
+		fmt.Println("a001")
 		for sqlRows.Next() {
 			if err := sqlRows.Scan(&ItemId, &ItemModel, &ItemModelName, &ItemQty, &ItemPrice); err != nil {
 				fmt.Printf("SalesStatistics.MonthlyStatistics: dbMySql.Err=%s", err)
 				break
 			}
 			fmt.Println(ItemId, ItemModel, ItemModelName, ItemPrice, ItemQty, ItemPrice)
+			fmt.Println("a002")
 
 			// 找出成本資料
 			itemCostInfo, bResult := v.MonthlyStatistics_FindCost(ItemId, ItemModelName, orderInfo[i].orderTime)
+
 			if bResult == false {
 				fmt.Printf("SalesStatistics.MonthlyStatistics: No Product cost info. ItemId=%s, ItemModelName=%s", ItemId, ItemModelName)
 				return
 			}
-
+			fmt.Println("a003")
 			// 商品成本
 			itemCost := 0.0
 			if itemCostInfo.Weight == 0 { // 如果重量為 0, 則不使用重量計算成本
@@ -161,11 +196,21 @@ func (v *SalesStatistics) MonthlyStatistics(dateStart string, dateEnd string) {
 			} else {
 				itemCost = itemCostInfo.ItemCost + itemCostInfo.Weight
 			}
+			fmt.Println("a004")
+
+			orderHandlingFeeFloat += (ItemPrice * v.handlingFee) * float64(ItemQty)
+			orderProfit += (ItemPrice - itemCost)
 
 		}
+		orderHandlingFee = int(orderHandlingFeeFloat + .5)
+		creditCardHandlingFee = int(orderInfo[i].totalPay + .5)
+		monthlyStatistics.totalProfit += (orderProfit - float64(orderHandlingFee) - float64(creditCardHandlingFee))
 
 		sqlRows.Close()
+		fmt.Println("a005")
 
 	}
+
+	fmt.Println("總淨利:", monthlyStatistics.totalProfit)
 
 }
