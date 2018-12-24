@@ -57,6 +57,14 @@ type OrderInfo struct {
 	comment           string  // 備註
 }
 
+type OrderInfoBuyDetail struct {
+	ItemId        string // itemId
+	ItemModel     string // itemModel
+	ItemModelName string
+	ItemQty       int
+	ItemPrice     float64
+}
+
 func (v *SalesImport) Init(mainApp *MainApp.MainApp) {
 	v.mainApp = mainApp
 }
