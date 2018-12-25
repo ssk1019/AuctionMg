@@ -2,15 +2,15 @@
 Navicat MySQL Data Transfer
 
 Source Server         : AuctionMg
-Source Server Version : 50724
+Source Server Version : 50710
 Source Host           : localhost:3306
 Source Database       : auctionmg
 
 Target Server Type    : MYSQL
-Target Server Version : 50724
+Target Server Version : 50710
 File Encoding         : 65001
 
-Date: 2018-12-22 23:30:45
+Date: 2018-12-26 00:32:04
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -1780,6 +1780,10 @@ INSERT INTO `productcost` VALUES ('CR-0002-VISSKO', '白色', '白色', '0', '20
 INSERT INTO `productcost` VALUES ('CR-0002-VISSKO', '黑色', '黑色', '0', '2018-02-13 00:00:00', '27', 'RMB', '53', 'TWD', '90');
 INSERT INTO `productcost` VALUES ('CR-0003-HOCO', '', '', '0', '2018-02-15 00:00:00', '15', 'RMB', '55', 'TWD', '90');
 INSERT INTO `productcost` VALUES ('CR-0004-BASEUS', '', '', '0', '2018-02-16 00:00:00', '24', 'RMB', '56', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0005-BASEUS', '', '', '68.5', '2018-01-01 00:00:00', '23', 'RMB', '6.165', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0006-ROCK', '單口-黑色', '單口-黑色', '55.3', '2018-01-01 00:00:00', '15', 'RMB', '10', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0006-ROCK', '四口-黑色', '四口-黑色', '105.2', '2018-01-01 00:00:00', '40', 'RMB', '10', 'TWD', '90');
+INSERT INTO `productcost` VALUES ('CR-0006-ROCK', '雙口-黑色', '雙口-黑色', '72.7', '2018-01-01 00:00:00', '26', 'RMB', '10', 'TWD', '90');
 INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-夜光款', '簡約款-夜光款', '0', '2018-02-26 00:00:00', '5', 'RMB', '66', 'TWD', '90');
 INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-橙色', '簡約款-橙色', '0', '2018-02-21 00:00:00', '5', 'RMB', '61', 'TWD', '90');
 INSERT INTO `productcost` VALUES ('HPC-0001-CKU', '簡約款-白色', '簡約款-白色', '0', '2018-02-25 00:00:00', '5', 'RMB', '65', 'TWD', '90');
