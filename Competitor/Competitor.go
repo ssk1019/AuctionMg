@@ -15,7 +15,7 @@ import (
 )
 
 // 取出該店家所有商品 itemId
-func caleMonthlyIncome_getItemIdList(mainApp *MainApp.MainApp, shopId string) (map[int]string, bool, error) {
+func GetItemIdList(mainApp *MainApp.MainApp, shopId string) (map[int]string, bool, error) {
 
 	// 取出商品列表：(可取出商品 ID)
 	// https://shopee.tw/api/v2/search_items/?by=pop&limit=100&match_id=62140966&newest=0&order=desc&page_type=shop
@@ -46,6 +46,7 @@ func caleMonthlyIncome_getItemIdList(mainApp *MainApp.MainApp, shopId string) (m
 				fmt.Printf("dbMySql.Err=%s", err)
 				return nil, false, err
 			}
+
 			// fmt.Println(itemIdList)
 			err := json.Unmarshal([]byte(itemIdList), &listItemId)
 			if err != nil {
@@ -113,7 +114,7 @@ func caleMonthlyIncome_getItemIdList(mainApp *MainApp.MainApp, shopId string) (m
 }
 
 // 取出該店家該商品詳細資訊
-func caleMonthlyIncome_getItemDetail(mainApp *MainApp.MainApp, shopId string, itemId string) (map[string]interface{}, bool, error) {
+func GetItemDetail(mainApp *MainApp.MainApp, shopId string, itemId string) (map[string]interface{}, bool, error) {
 
 	// 取出某商品資訊: (銷售...等)
 	// https://shopee.tw/api/v2/item/get?itemid=1149763457&shopid=62140966
@@ -144,6 +145,7 @@ func caleMonthlyIncome_getItemDetail(mainApp *MainApp.MainApp, shopId string, it
 				fmt.Printf("dbMySql.Err=%s", err)
 				return nil, false, err
 			}
+
 			// fmt.Println(strItemDetail)
 			// fmt.Println(itemIdList)
 			err := json.Unmarshal([]byte(strItemDetail), &itemDetail)
@@ -155,6 +157,7 @@ func caleMonthlyIncome_getItemDetail(mainApp *MainApp.MainApp, shopId string, it
 		}
 	}
 	// fmt.Println("get from web...")
+
 	for i := 0; i < 1; i++ {
 		url := fmt.Sprintf("https://shopee.tw/api/v2/item/get?itemid=%v&shopid=%v", itemId, shopId)
 		// fmt.Println(url)
@@ -192,13 +195,14 @@ func caleMonthlyIncome_getItemDetail(mainApp *MainApp.MainApp, shopId string, it
 	return itemDetail, false, nil
 }
 
+// 計算月營收
 func CaleMonthlyIncome(mainApp *MainApp.MainApp, shopId string) error {
 
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	totalIncome := 0.0
 
-	mapItemId, _, err := caleMonthlyIncome_getItemIdList(mainApp, shopId)
+	mapItemId, _, err := GetItemIdList(mainApp, shopId)
 	if err != nil {
 		fmt.Println("Error!" + err.Error())
 		return err
@@ -211,7 +215,7 @@ func CaleMonthlyIncome(mainApp *MainApp.MainApp, shopId string) error {
 	cnt := 1
 	totalCnt := len(mapItemId)
 	for _, value := range mapItemId {
-		itemDetail, isCache, err := caleMonthlyIncome_getItemDetail(mainApp, shopId, value)
+		itemDetail, isCache, err := GetItemDetail(mainApp, shopId, value)
 		if err != nil {
 			fmt.Println("Error!" + err.Error())
 			return err
@@ -229,6 +233,115 @@ func CaleMonthlyIncome(mainApp *MainApp.MainApp, shopId string) error {
 		fmt.Printf("Get ShopId=%s ItemId=%s [%d/%d] isCache=%v Name=%s\n", shopId, value, cnt, totalCnt, isCache, name)
 
 		fmt.Printf("price=%f  sold=%f, totalIncome=%f\n", price, sold, totalIncome)
+		cnt++
+		if isCache == false {
+			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+		}
+	}
+
+	return nil
+}
+
+// 計算庫存金額
+func CaleStockMoney(mainApp *MainApp.MainApp, shopId string) error {
+
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	mapItemId, _, err := GetItemIdList(mainApp, shopId)
+	if err != nil {
+		fmt.Println("Error!" + err.Error())
+		return err
+	}
+
+	// fmt.Println(mapItemId)
+	// itemDetail, err := caleMonthlyIncome_getItemDetail(mainApp, shopId, "1116148327")
+	// fmt.Println(err, itemDetail)
+
+	cnt := 1
+	var totalMoney float64 = 0
+	// totalCnt := len(mapItemId)
+	for _, value := range mapItemId {
+		itemDetail, isCache, err := GetItemDetail(mainApp, shopId, value)
+		if err != nil {
+			fmt.Println("Error!" + err.Error())
+			return err
+		}
+		// fmt.Println(itemDetail)
+
+		// fmt.Println(itemDetail["name"])
+
+		var itemTotalMoney float64 = 0
+		tmpA := itemDetail["item"].(map[string]interface{})
+		tmpB := tmpA["models"].([]interface{})
+		for _, modelDetail := range tmpB {
+			// fmt.Printf("aaaa %v  %v", idx, modelDetail)
+			tmpC := modelDetail.(map[string]interface{})
+			price := tmpC["price"].(float64) / 100000
+			stock := tmpC["stock"].(float64)
+			name := tmpC["name"].(string)
+			itemTotalMoney = itemTotalMoney + (stock * price)
+			fmt.Printf("name=%v, stock=%v, price=%v\n", name, stock, price)
+		}
+		totalMoney = totalMoney + itemTotalMoney
+
+		fmt.Printf("Item %v %v %v\n", tmpA["name"], itemTotalMoney, totalMoney)
+		cnt++
+		if isCache == false {
+			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+		}
+	}
+
+	return nil
+}
+
+// 取得並更新商品列表
+func UpdateMyShopItemInfo(mainApp *MainApp.MainApp, shopId string) error {
+
+	var strSQL string
+	// var result sql.Result
+	var errSql error
+
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	mapItemId, _, err := GetItemIdList(mainApp, shopId)
+	if err != nil {
+		fmt.Println("Error!" + err.Error())
+		return err
+	}
+
+	cnt := 1
+	// totalCnt := len(mapItemId)
+	for _, value := range mapItemId {
+		itemDetail, isCache, err := GetItemDetail(mainApp, shopId, value)
+		if err != nil {
+			fmt.Println("Error!" + err.Error())
+			return err
+		}
+		// fmt.Println(itemDetail)
+
+		// fmt.Println(itemDetail["itemid"], itemDetail["name"])
+
+		itemInfo := itemDetail["item"].(map[string]interface{})
+		fmt.Printf("%d  %v  %s", cnt, int(itemInfo["itemid"].(float64)), itemInfo["name"])
+
+		strSQL = fmt.Sprintf("UPDATE ProductInfo SET NameCN='%s' WHERE PlatformItemId='%d'", itemInfo["name"], int(itemInfo["itemid"].(float64)))
+		_, errSql = mainApp.DbMySql.Exec(strSQL)
+		if errSql != nil {
+			fmt.Printf("dbMySql.Err=%s", errSql)
+		} else {
+			// fmt.Printf("Run SQL result=%q", result)
+		}
+
+		// tmpB := tmpA["models"].([]interface{})
+		// for _, modelDetail := range tmpB {
+		// 	// fmt.Printf("aaaa %v  %v", idx, modelDetail)
+		// 	tmpC := modelDetail.(map[string]interface{})
+		// 	price := tmpC["price"].(float64) / 100000
+		// 	stock := tmpC["stock"].(float64)
+		// 	name := tmpC["name"].(string)
+		// 	// fmt.Printf("name=%v, stock=%v, price=%v\n", name, stock, price)
+		// }
+
 		cnt++
 		if isCache == false {
 			time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
