@@ -28,7 +28,7 @@ func GetItemIdList(mainApp *MainApp.MainApp, shopId string) (map[int]string, boo
 	listItemId := make(map[int]string)
 
 	nowTime := time.Now()
-	condTimeStr := nowTime.Add(-1440 * time.Minute) // 一天之內的資料都有效
+	condTimeStr := nowTime.Add(-600 * time.Minute) // 10小時之內的資料都有效
 
 	// 先找資料庫的是否在有效期限內
 	strSQL = fmt.Sprintf("SELECT ItemIdList, ItemIdCnt FROM ShopItemList WHERE ShopId='%s' AND UpdateTime>='%s'", shopId, condTimeStr)
@@ -127,7 +127,7 @@ func GetItemDetail(mainApp *MainApp.MainApp, shopId string, itemId string) (map[
 	var itemDetail map[string]interface{}
 
 	nowTime := time.Now()
-	condTimeStr := nowTime.Add(-1440 * time.Minute) // 一天之內的資料都有效
+	condTimeStr := nowTime.Add(-600 * time.Minute) // 10小時之內的資料都有效
 
 	// 先找資料庫的是否在有效期限內
 	strSQL = fmt.Sprintf("SELECT Data FROM ShopItemDetail WHERE ShopId='%s' AND ItemId='%s' AND UpdateTime>='%s'", shopId, itemId, condTimeStr)

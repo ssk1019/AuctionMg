@@ -310,7 +310,7 @@ func (v *SalesImport) CsvImportFromShopee(csvFilePath string) {
 			for i := 0; i < len(buyDetail); i++ {
 				// fmt.Println(buyDetail[i])
 				// itemName, err := getStringKeywordRange(&buyDetail[i], "商品名稱:", ";")
-				itemModelName, err := v.getStringKeywordRange(&buyDetail[i], "商品選項名稱:", ";")
+				itemModelName, err := v.getStringKeywordRange(&buyDetail[i], "商品規格名稱:", ";")
 				itemModel, err := v.getStringKeywordRange(&buyDetail[i], "商品選項貨號: ", ";")
 				itemId, err := v.getStringKeywordRange(&buyDetail[i], "主商品貨號: ", ";")
 				itemPriceS, err := v.getStringKeywordRange(&buyDetail[i], "價格: $ ", ";")
@@ -332,7 +332,7 @@ func (v *SalesImport) CsvImportFromShopee(csvFilePath string) {
 				}
 			}
 		} else {
-			idxItemModelName := v.findStringInArray(lineFirst, "商品選項名稱", false)
+			idxItemModelName := v.findStringInArray(lineFirst, "商品規格名稱", false)
 			idxItemModel := v.findStringInArray(lineFirst, "商品選項貨號", false)
 			idxItemId := v.findStringInArray(lineFirst, "主商品貨號", false)
 			idxItemPrice := v.findStringInArray(lineFirst, "商品活動價格", false)
