@@ -120,6 +120,7 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 
 	// 先取得 ProductInfo 列表
 	mapProductInfo := make(map[string]map[string]ProductInfo)
+	// SELECT EffectiveDate, ItemId, ItemModel, ItemModelName, ItemCost, ItemCostCourency, FreightCost, FreightCostCourency, FreightCostPerWeight FROM ProductCost WHERE ItemId="CC-0001-KLX" ORDER BY EffectiveDate DESC
 	strSQL = fmt.Sprintf("SELECT ItemId, NameCN, ItemModel, ItemModelName, Weight, CostRMB FROM ProductInfo")
 	sqlRows, errSql := mainApp.DbMySql.Query(strSQL)
 
