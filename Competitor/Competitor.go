@@ -322,7 +322,7 @@ func UpdateMyShopItemInfo(mainApp *MainApp.MainApp, shopId string) error {
 		// fmt.Println(itemDetail["itemid"], itemDetail["name"])
 
 		itemInfo := itemDetail["item"].(map[string]interface{})
-		fmt.Printf("%d  %v  %s", cnt, int(itemInfo["itemid"].(float64)), itemInfo["name"])
+		fmt.Printf("%d  %v  %s\n", cnt, int(itemInfo["itemid"].(float64)), itemInfo["name"])
 
 		strSQL = fmt.Sprintf("UPDATE ProductInfo SET NameCN='%s' WHERE PlatformItemId='%d'", itemInfo["name"], int(itemInfo["itemid"].(float64)))
 		_, errSql = mainApp.DbMySql.Exec(strSQL)

@@ -233,7 +233,7 @@ func main() {
 		// salesImport.CsvImportFromShopee("./Data/fafafa1019.shopee-order.20181101-20181130.csv")
 		// salesImport.CsvImportFromShopee("./Data/Order.completed.20190201_20190228.csv")
 		// salesImport.CsvImportFromShopee("./Data/Order.completed.20190301_20190331.csv")
-		salesImport.CsvImportFromShopee("./Data/Order.all.20190501_20190522.csv")
+		salesImport.CsvImportFromShopee("./Data/Order.completed.20190501_20190531.csv")
 	}
 
 	if false {
@@ -244,8 +244,8 @@ func main() {
 
 	// Competitor.UpdateMyShopItemInfo(HanMainApp, "62140966") // 更新我的商品列表 ( ProductInfo )
 
-	CaleBuyList(HanMainApp, "2019-04-23", "2019-05-22") // 列出補貨清單
-	// CaleMyProfit(HanMainApp, "2019-05-01", "2019-05-30") // 計算區間(每月)淨利
+	// CaleBuyList(HanMainApp, "2019-04-23", "2019-05-22") // 列出補貨清單
+	CaleMyProfit(HanMainApp, "2019-05-01", "2019-05-30") // 計算區間(每月)淨利
 
 	// Competitor.CaleMonthlyIncome(HanMainApp, "62140966") // My
 	// Competitor.CaleStockMoney(HanMainApp, "62140966") // My 計算庫存商品總金額
