@@ -113,40 +113,44 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 	RATE_RMB_TWD := float64(4.6)
 
 	var strSQL string
+	var orderCnt int
 	var totalMoney, totalProfit float64
 
+	orderCnt = 0
 	totalMoney = 0
 	totalProfit = 0
 
-	// 先取得 ProductInfo 列表
-	mapProductInfo := make(map[string]map[string]ProductInfo)
-	// SELECT EffectiveDate, ItemId, ItemModel, ItemModelName, ItemCost, ItemCostCourency, FreightCost, FreightCostCourency, FreightCostPerWeight FROM ProductCost WHERE ItemId="CC-0001-KLX" ORDER BY EffectiveDate DESC
-	strSQL = fmt.Sprintf("SELECT ItemId, NameCN, ItemModel, ItemModelName, Weight, CostRMB FROM ProductInfo")
-	sqlRows, errSql := mainApp.DbMySql.Query(strSQL)
+	/*
+		// 先取得 ProductInfo 列表
+		mapProductInfo := make(map[string]map[string]ProductInfo)
+		// SELECT EffectiveDate, ItemId, ItemModel, ItemModelName, ItemCost, ItemCostCourency, FreightCost, FreightCostCourency, FreightCostPerWeight FROM ProductCost WHERE ItemId="CC-0001-KLX" ORDER BY EffectiveDate DESC
+		strSQL = fmt.Sprintf("SELECT ItemId, NameCN, ItemModel, ItemModelName, Weight, CostRMB FROM ProductInfo")
+		sqlRows, errSql := mainApp.DbMySql.Query(strSQL)
 
-	defer sqlRows.Close()
-	if errSql != nil {
-		fmt.Printf("CaleMyProfit: dbMySql.Err=%s", errSql)
-		return
-	}
-	for sqlRows.Next() {
-		var itemId, itemName, itemModel, itemModelName string
-		var weight, costRMB float64
-		if err := sqlRows.Scan(&itemId, &itemName, &itemModel, &itemModelName, &weight, &costRMB); err != nil {
-			fmt.Printf("CaleMyProfit: dbMySql.Err=%s", err)
-			break
+		defer sqlRows.Close()
+		if errSql != nil {
+			fmt.Printf("CaleMyProfit: dbMySql.Err=%s", errSql)
+			return
 		}
-		if _, ok := mapProductInfo[itemId]; !ok {
-			mapProductInfo[itemId] = map[string]ProductInfo{}
-		}
+		for sqlRows.Next() {
+			var itemId, itemName, itemModel, itemModelName string
+			var weight, costRMB float64
+			if err := sqlRows.Scan(&itemId, &itemName, &itemModel, &itemModelName, &weight, &costRMB); err != nil {
+				fmt.Printf("CaleMyProfit: dbMySql.Err=%s", err)
+				break
+			}
+			if _, ok := mapProductInfo[itemId]; !ok {
+				mapProductInfo[itemId] = map[string]ProductInfo{}
+			}
 
-		if itemModelName == "" {
-			mapProductInfo[itemId]["default"] = ProductInfo{itemId: itemId, itemName: itemName, itemModel: itemModel, itemModelName: itemModelName, weight: weight, costRMB: costRMB}
-		} else {
-			mapProductInfo[itemId][itemModelName] = ProductInfo{itemId: itemId, itemName: itemName, itemModel: itemModel, itemModelName: itemModelName, weight: weight, costRMB: costRMB}
-			// fmt.Printf("%v %v  %v\n", itemId, itemModel, weight)
+			if itemModelName == "" {
+				mapProductInfo[itemId]["default"] = ProductInfo{itemId: itemId, itemName: itemName, itemModel: itemModel, itemModelName: itemModelName, weight: weight, costRMB: costRMB}
+			} else {
+				mapProductInfo[itemId][itemModelName] = ProductInfo{itemId: itemId, itemName: itemName, itemModel: itemModel, itemModelName: itemModelName, weight: weight, costRMB: costRMB}
+				// fmt.Printf("%v %v  %v\n", itemId, itemModel, weight)
+			}
 		}
-	}
+	*/
 
 	// 取得訂單列表
 	strSQL = fmt.Sprintf("SELECT orderId, orderAmount, buyerFreight, payMethod FROM OrderInfo WHERE PayTime>='%s' AND PayTime<='%s'", dateStart, dateEnd)
@@ -159,6 +163,7 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 
 	var orderId, payMethod string
 	var orderAmount, buyerFreight int
+	var orderFreightRemit, orderPlatformFee, orderCreditCardFee float64
 	for sqlRows1.Next() {
 		if err := sqlRows1.Scan(&orderId, &orderAmount, &buyerFreight, &payMethod); err != nil {
 			fmt.Printf("CaleMyProfit: dbMySql.Err=%s", err)
@@ -166,11 +171,15 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 		}
 		fmt.Printf("orderId %v %v %v %v =====================\n", orderId, orderAmount, buyerFreight, payMethod)
 
+		orderCnt += 1
 		totalMoney += float64(orderAmount)
 
+		orderPlatformFee = 0
 		// 取得訂單明細
 		var itemId, itemModel, itemModelName string
 		var itemQty, itemPrice int
+		var itemCost = float64(0)
+		var itemFreightCost = float64(0)
 		var orderProfit = float64(0)
 		strSQL = fmt.Sprintf("SELECT itemId, itemModel, itemModelName, itemQty, itemPrice FROM OrderInfoBuyDetail WHERE OrderId='%s'", orderId)
 		sqlRows2, errSql2 := mainApp.DbMySql.Query(strSQL)
@@ -184,29 +193,96 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 				fmt.Printf("CaleMyProfit: dbMySql.Err=%s", err)
 				break
 			}
-			if _, val1 := mapProductInfo[itemId]; !val1 {
-				fmt.Errorf("ProductInfo 缺少 %s", itemId)
+
+			if orderId == "19052923376HRSQ" {
+				fmt.Println()
+			}
+
+			// 取得價格清單
+			var findCost = false
+			var findFreightCost = false
+			var itemPlatformFee float64
+			var tmpItemModel, tmpItemModelName, tmpItemCostCourency, tmpFreightCostCourency string
+			var tmpItemCost, tmpItemWeight, tmpFreightCost, tmpFreightCostPerWeight float64
+			strSQL = fmt.Sprintf("SELECT ItemModel, ItemModelName, ItemCost, ItemCostCourency, Weight, FreightCost, FreightCostCourency, FreightCostPerWeight FROM ProductCost WHERE ItemId='%s' ORDER BY EffectiveDate DESC", itemId)
+			sqlRows3, errSql3 := mainApp.DbMySql.Query(strSQL)
+			defer sqlRows3.Close()
+			if errSql3 != nil {
+				fmt.Printf("CaleMyProfit: dbMySql.Err=%s", errSql2)
+				return
+			}
+			for sqlRows3.Next() {
+				if err := sqlRows3.Scan(&tmpItemModel, &tmpItemModelName, &tmpItemCost, &tmpItemCostCourency, &tmpItemWeight, &tmpFreightCost, &tmpFreightCostCourency, &tmpFreightCostPerWeight); err != nil {
+					fmt.Printf("CaleMyProfit: dbMySql.Err=%s", err)
+					break
+				}
+				if tmpItemModel == "" || tmpItemModel == itemModel {
+					// 計算商品成本
+					if tmpItemCostCourency == "RMB" {
+						itemCost = tmpItemCost * RATE_RMB_TWD
+						findCost = true
+					} else if tmpItemCostCourency == "TWD" {
+						itemCost = tmpItemCost
+						findCost = true
+					}
+
+					// 計算商品運費成本
+					if tmpItemWeight == 0.0 { // 直接價格計算
+						if tmpFreightCostCourency == "RMB" {
+							itemFreightCost = tmpFreightCost * RATE_RMB_TWD
+							findFreightCost = true
+						} else if tmpFreightCostCourency == "TWD" {
+							itemFreightCost = tmpFreightCost
+							findFreightCost = true
+						}
+					} else { // 以重量計算
+						if tmpFreightCostCourency == "RMB" {
+							itemFreightCost = tmpFreightCostPerWeight * tmpItemWeight / 1000 * RATE_RMB_TWD
+							findFreightCost = true
+						} else if tmpFreightCostCourency == "TWD" {
+							itemFreightCost = tmpFreightCostPerWeight * tmpItemWeight / 1000
+							findFreightCost = true
+						}
+					}
+					break
+				}
+
+			}
+			sqlRows3.Close()
+			if findCost == false || findFreightCost == false {
+				fmt.Printf("CaleMyProfit: Couldn't find item cost! itemId=%s, itemCost=%f, itemFreightCost=%f", itemId, itemCost, itemFreightCost)
 				return
 			}
 
-			productInfo := mapProductInfo[itemId][itemModelName]
-			if _, val2 := mapProductInfo[itemId][itemModelName]; !val2 {
-				productInfo = mapProductInfo[itemId]["default"]
+			itemPlatformFee = (float64(itemPrice) * 0.0149) * float64(itemQty)
+			orderPlatformFee += itemPlatformFee
 
-			}
-			fmt.Printf("    %v %v %v %v %v   %v %v\n", itemId, itemModel, itemModelName, itemQty, itemPrice, productInfo.weight, productInfo.itemModelName)
+			allItemProfit := (float64(itemPrice) - itemCost - itemFreightCost) * float64(itemQty)
+			orderProfit += allItemProfit
 
-			orderProfit += (float64(itemPrice) - productInfo.costRMB*RATE_RMB_TWD) * float64(itemQty)
+			fmt.Printf("    %v %v %v qty=%v price=%v cost=%v freightCost=%v 平台手續費=%v, 商品總淨利=%v\n", itemId, itemModel, itemModelName, itemQty, itemPrice, itemCost, itemFreightCost, itemPlatformFee, allItemProfit)
 		}
 		if buyerFreight == 0 {
-			orderProfit -= 60
+			orderFreightRemit = 60
+		} else {
+			orderFreightRemit = 0
 		}
+
+		if payMethod == "信用卡" {
+			orderCreditCardFee = float64(orderAmount) * 0.015
+		} else {
+			orderCreditCardFee = 0
+		}
+
 		sqlRows2.Close()
 
-		totalProfit += orderProfit
+		totalProfit += (orderProfit - orderFreightRemit - orderPlatformFee - orderCreditCardFee)
+
+		fmt.Printf("    減免運費=%v, 平台交易費=%v, 信用卡費=%v, 訂單淨利=%v, 累積淨利=%v\n\n", orderFreightRemit, orderPlatformFee, orderCreditCardFee, orderProfit, totalProfit)
 	}
 	sqlRows1.Close()
 
+	fmt.Printf("訂單筆數:%v\n", orderCnt)
 	fmt.Printf("總收入:%v\n", totalMoney)
 	fmt.Printf("總淨利:%v\n", totalProfit)
 
