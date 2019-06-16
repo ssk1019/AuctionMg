@@ -113,47 +113,18 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 	RATE_RMB_TWD := float64(4.6)
 
 	var strSQL string
-	var orderCnt int
-	var totalMoney, totalProfit float64
+	var orderCnt, totalItemSellCnt int
+	var totalMoney, totalProfit, totalPlatformFee, totalCreditCardFee float64
 
 	orderCnt = 0
+	totalItemSellCnt = 0
 	totalMoney = 0
 	totalProfit = 0
-
-	/*
-		// 先取得 ProductInfo 列表
-		mapProductInfo := make(map[string]map[string]ProductInfo)
-		// SELECT EffectiveDate, ItemId, ItemModel, ItemModelName, ItemCost, ItemCostCourency, FreightCost, FreightCostCourency, FreightCostPerWeight FROM ProductCost WHERE ItemId="CC-0001-KLX" ORDER BY EffectiveDate DESC
-		strSQL = fmt.Sprintf("SELECT ItemId, NameCN, ItemModel, ItemModelName, Weight, CostRMB FROM ProductInfo")
-		sqlRows, errSql := mainApp.DbMySql.Query(strSQL)
-
-		defer sqlRows.Close()
-		if errSql != nil {
-			fmt.Printf("CaleMyProfit: dbMySql.Err=%s", errSql)
-			return
-		}
-		for sqlRows.Next() {
-			var itemId, itemName, itemModel, itemModelName string
-			var weight, costRMB float64
-			if err := sqlRows.Scan(&itemId, &itemName, &itemModel, &itemModelName, &weight, &costRMB); err != nil {
-				fmt.Printf("CaleMyProfit: dbMySql.Err=%s", err)
-				break
-			}
-			if _, ok := mapProductInfo[itemId]; !ok {
-				mapProductInfo[itemId] = map[string]ProductInfo{}
-			}
-
-			if itemModelName == "" {
-				mapProductInfo[itemId]["default"] = ProductInfo{itemId: itemId, itemName: itemName, itemModel: itemModel, itemModelName: itemModelName, weight: weight, costRMB: costRMB}
-			} else {
-				mapProductInfo[itemId][itemModelName] = ProductInfo{itemId: itemId, itemName: itemName, itemModel: itemModel, itemModelName: itemModelName, weight: weight, costRMB: costRMB}
-				// fmt.Printf("%v %v  %v\n", itemId, itemModel, weight)
-			}
-		}
-	*/
+	totalPlatformFee = 0
+	totalCreditCardFee = 0
 
 	// 取得訂單列表
-	strSQL = fmt.Sprintf("SELECT orderId, orderAmount, buyerFreight, payMethod FROM OrderInfo WHERE PayTime>='%s' AND PayTime<='%s'", dateStart, dateEnd)
+	strSQL = fmt.Sprintf("SELECT orderId, orderAmount, totalPay, buyerFreight, payMethod FROM OrderInfo WHERE PayTime>='%s' AND PayTime<='%s'", dateStart, dateEnd)
 	sqlRows1, errSql1 := mainApp.DbMySql.Query(strSQL)
 	defer sqlRows1.Close()
 	if errSql1 != nil {
@@ -162,10 +133,10 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 	}
 
 	var orderId, payMethod string
-	var orderAmount, buyerFreight int
+	var orderAmount, totalPay, buyerFreight int
 	var orderFreightRemit, orderPlatformFee, orderCreditCardFee float64
 	for sqlRows1.Next() {
-		if err := sqlRows1.Scan(&orderId, &orderAmount, &buyerFreight, &payMethod); err != nil {
+		if err := sqlRows1.Scan(&orderId, &orderAmount, &totalPay, &buyerFreight, &payMethod); err != nil {
 			fmt.Printf("CaleMyProfit: dbMySql.Err=%s", err)
 			break
 		}
@@ -254,6 +225,7 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 				return
 			}
 
+			totalItemSellCnt += itemQty
 			itemPlatformFee = (float64(itemPrice) * 0.0149) * float64(itemQty)
 			orderPlatformFee += itemPlatformFee
 
@@ -269,23 +241,27 @@ func CaleMyProfit(mainApp *MainApp.MainApp, dateStart string, dateEnd string) {
 		}
 
 		if payMethod == "信用卡" {
-			orderCreditCardFee = float64(orderAmount) * 0.015
+			orderCreditCardFee = float64(totalPay) * 0.015
 		} else {
 			orderCreditCardFee = 0
 		}
 
 		sqlRows2.Close()
 
+		totalPlatformFee += orderPlatformFee
+		totalCreditCardFee += orderCreditCardFee
 		totalProfit += (orderProfit - orderFreightRemit - orderPlatformFee - orderCreditCardFee)
 
-		fmt.Printf("    減免運費=%v, 平台交易費=%v, 信用卡費=%v, 訂單淨利=%v, 累積淨利=%v\n\n", orderFreightRemit, orderPlatformFee, orderCreditCardFee, orderProfit, totalProfit)
+		fmt.Printf("    減免運費=%v, 平台交易費=%v, 信用卡費=%v, 訂單淨利=%v, 累積淨利=%v, 累積營收=%v\n\n", orderFreightRemit, orderPlatformFee, orderCreditCardFee, orderProfit, totalProfit, totalMoney)
 	}
 	sqlRows1.Close()
 
 	fmt.Printf("訂單筆數:%v\n", orderCnt)
+	fmt.Printf("銷售商品總數:%v  平均訂單購買商品數:%v\n", totalItemSellCnt, float32(totalItemSellCnt)/float32(orderCnt))
 	fmt.Printf("總收入:%v\n", totalMoney)
-	fmt.Printf("總淨利:%v\n", totalProfit)
-
+	fmt.Printf("總信用卡手續費:%v\n", totalCreditCardFee)
+	fmt.Printf("總平台手續費:%v\n", totalPlatformFee)
+	fmt.Printf("總淨利:%v (%v)\n", totalProfit, (totalProfit * 100 / float64(totalMoney)))
 }
 
 func main() {
@@ -310,7 +286,7 @@ func main() {
 		// salesImport.CsvImportFromShopee("./Data/fafafa1019.shopee-order.20181101-20181130.csv")
 		// salesImport.CsvImportFromShopee("./Data/Order.completed.20190201_20190228.csv")
 		// salesImport.CsvImportFromShopee("./Data/Order.completed.20190301_20190331.csv")
-		salesImport.CsvImportFromShopee("./Data/Order.completed.20190501_20190531.csv")
+		salesImport.CsvImportFromShopee("./Data/Order.completed.20190101_20190131.csv")
 	}
 
 	if false {
@@ -322,7 +298,7 @@ func main() {
 	// Competitor.UpdateMyShopItemInfo(HanMainApp, "62140966") // 更新我的商品列表 ( ProductInfo )
 
 	// CaleBuyList(HanMainApp, "2019-04-23", "2019-05-22") // 列出補貨清單
-	CaleMyProfit(HanMainApp, "2019-05-01", "2019-05-30") // 計算區間(每月)淨利
+	CaleMyProfit(HanMainApp, "2019-04-01", "2019-04-30") // 計算區間(每月)淨利
 
 	// Competitor.CaleMonthlyIncome(HanMainApp, "62140966") // My
 	// Competitor.CaleStockMoney(HanMainApp, "62140966") // My 計算庫存商品總金額
