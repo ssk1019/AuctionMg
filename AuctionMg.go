@@ -286,21 +286,22 @@ func main() {
 		// salesImport.CsvImportFromShopee("./Data/fafafa1019.shopee-order.20181101-20181130.csv")
 		// salesImport.CsvImportFromShopee("./Data/Order.completed.20190201_20190228.csv")
 		// salesImport.CsvImportFromShopee("./Data/Order.completed.20190301_20190331.csv")
-		salesImport.CsvImportFromShopee("./Data/Order.completed.20190101_20190131.csv")
+		// salesImport.CsvImportFromShopee("./Data/Order.completed.20190101_20190131.csv")
+		salesImport.CsvImportFromShopee("./Data/Order.completed.20190601_20190630.csv")
 	}
 
 	if false {
 		salesStatistics := new(Models.SalesStatistics)
 		salesStatistics.Init(HanMainApp)
-		salesStatistics.MonthlyStatistics("2018/01/01 00:00:00", "2018/12/31 23:59:59")
+		salesStatistics.MonthlyStatistics("2019/06/01 00:00:00", "2019/06/30 23:59:59")
 	}
 
 	// Competitor.UpdateMyShopItemInfo(HanMainApp, "62140966") // 更新我的商品列表 ( ProductInfo )
 
 	// CaleBuyList(HanMainApp, "2019-04-23", "2019-05-22") // 列出補貨清單
-	CaleMyProfit(HanMainApp, "2019-04-01", "2019-04-30") // 計算區間(每月)淨利
+	// CaleMyProfit(HanMainApp, "2019-06-01", "2019-06-30") // 計算區間(每月)淨利
 
-	// Competitor.CaleMonthlyIncome(HanMainApp, "62140966") // My
+	Competitor.CaleMonthlyIncome(HanMainApp, "62140966") // My
 	// Competitor.CaleStockMoney(HanMainApp, "62140966") // My 計算庫存商品總金額
 	// Competitor.CaleMonthlyIncome(HanMainApp, "28876327") // 親子媽
 
